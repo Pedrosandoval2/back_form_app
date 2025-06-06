@@ -3,6 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './user.entity';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { LoginDto } from './dto/login-user.dto';
 
 @Controller('v1/users')
 export class UsersController {
@@ -14,12 +15,17 @@ export class UsersController {
     }
 
     @Get('/:id')
-    findOne(@Param('id') id: string): Promise<User> {
+    findOne(@Param('id') id: string): Promise<Omit<User, 'password'>> {
         return this.usersService.findOne(id);
     }
 
-    @Post()
-    createUser(@Body() user: CreateUserDto): Promise<User> {
+    @Post('/signIn')
+    singIn(@Body() userSingIn: LoginDto) {
+        return this.usersService.signIn(userSingIn)
+    }
+
+    @Post('/register')
+    createUser(@Body() user: CreateUserDto) {
         return this.usersService.createUser(user);
     }
 
@@ -27,7 +33,7 @@ export class UsersController {
     updateUser(
         @Param('id') id: string,
         @Body() userUpdate: UpdateUserDto
-    ): Promise<User> {
+    ): Promise<Pick<User, 'firstName' | 'email'>> {
         return this.usersService.updateUser(id, userUpdate)
     }
 
