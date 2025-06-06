@@ -1,10 +1,10 @@
-import { IsEmail, IsNotEmpty, Length, Min, validate } from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, Length, Min, validate } from 'class-validator';
 import { Entity, Column, PrimaryGeneratedColumn, Unique } from 'typeorm';
 
 @Entity({ name: 'users' })
 export class User {
   @PrimaryGeneratedColumn("uuid")
-  id: number;
+  id: string;
 
   @Column()
   @IsNotEmpty()
@@ -25,19 +25,10 @@ export class User {
   email: string;
 
   @Column({ default: 'user' })
+  @IsNotEmpty()
   role: string;
 
   @Column({ default: true })
+  @IsBoolean()
   isActive: boolean;
 }
-
-const user = new User()
-
-validate(user).then(errors => {
-  // errors is an array of validation errors
-  if (errors.length > 0) {
-    console.log('validation failed. errors: ', errors);
-  } else {
-    console.log('validation succeed');
-  }
-});
