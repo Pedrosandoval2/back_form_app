@@ -1,5 +1,5 @@
 
-import { IsBoolean } from "class-validator";
+import { IsBoolean, IsNumber } from "class-validator";
 import { customersEvent } from "src/customersEvents/customersEvent.entity";
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm"
 
@@ -10,7 +10,10 @@ export class Customer {
     id: string;
 
     @Column({ nullable: false, unique: true })
-    fullName: string;
+    firstName: string;
+
+    @Column({ nullable: false, unique: true })
+    lastName: string;
 
     @Column()
     @IsBoolean()
@@ -19,6 +22,10 @@ export class Customer {
     @Column({ default: true })
     @IsBoolean()
     isActive: boolean;
+
+    @Column()
+    @IsNumber()
+    phone: number;
 
     @Column({
         type: 'datetime',

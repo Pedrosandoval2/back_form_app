@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsNumber, IsOptional } from "class-validator";
+import { IsBoolean, IsEmail, IsNotEmpty, IsNumber, IsOptional, MaxLength, MinLength } from "class-validator";
 
 export class CreateCustomerDto {
 
@@ -11,6 +11,13 @@ export class CreateCustomerDto {
     @IsOptional()
     @IsEmail({}, { message: 'Email inválido' })
     email: string;
+    
+    @IsBoolean()
+    isMember: boolean;
+
+    @IsBoolean()
+    @IsOptional()
+    isActive: boolean;
 
     @IsNumber()
     phone: number;

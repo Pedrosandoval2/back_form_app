@@ -10,10 +10,10 @@ export class customersEvent {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(() => Customer, (customer) => customer.customersEvents)
+    @ManyToOne(() => Customer, (customer) => customer.customersEvents, { eager: true })
     customer: Customer;
 
-    @ManyToOne(() => Event, (event) => event.customersEvents)
+    @ManyToOne(() => Event, (event) => event.customersEvents, { eager: true })
     event: Event;
 
     @Column()
