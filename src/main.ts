@@ -4,12 +4,14 @@ import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
   app.enableCors({
     origin: 'http://localhost:3001', // solo permite ese origen
     // origin: '*', // opción menos segura: permite todos los orígenes
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
+
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,              // Quita campos no definidos en el DTO
     // forbidNonWhitelisted: true,  // Lanza error si hay campos no definidos
