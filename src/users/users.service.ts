@@ -8,7 +8,7 @@ import { hasSpaces } from './utils/hasSpaces';
 import { JwtService } from '@nestjs/jwt';
 
 import * as bcryptjs from 'bcryptjs';
-import { LoginDto } from './dto/login-user.dto';
+import { LoginDto } from '../auth/dto/login-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -18,8 +18,11 @@ export class UsersService {
         private readonly jwtServise: JwtService
     ) { }
 
-    async createUser({ email, firstName, lastName, password }: CreateUserDto) {
+    async register({ email, firstName, lastName, password }: CreateUserDto) {
         if (!email) throw new BadRequestException('No hay usuario para crear');
+        if (hasSpaces(password)) {
+            return new HttpException('Error in password', HttpStatus.CONFLICT)
+        }
         try {
             const userFound = await this.usersRepository.findOne({
                 where: { firstName }
