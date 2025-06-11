@@ -1,10 +1,10 @@
 import { Type } from "class-transformer";
-import { IsDate, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsDate, IsNumber, IsOptional, IsString } from "class-validator";
 
-export class CreateEventDto {
+export class UpdateEventDto {
 
     @IsString()
-    @IsNotEmpty()
+    @IsOptional()
     name_event: string;
 
     @IsString()
@@ -12,16 +12,16 @@ export class CreateEventDto {
     description: string;
 
     @IsNumber()
-    @IsNotEmpty()
+    @IsOptional()
     price_unit: number;
 
-    @IsNotEmpty()
     @IsDate({ message: 'start_date debe ser una fecha válida' })
     @Type(() => Date)
+    @IsOptional()
     start_date: Date;
   
-    @IsNotEmpty()
     @IsDate({ message: 'end_date debe ser una fecha válida' })
     @Type(() => Date)
+    @IsOptional()
     end_date: Date;
 }
