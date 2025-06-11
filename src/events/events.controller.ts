@@ -37,6 +37,4 @@ export class EventsController {
         // Optionally, you may want to pass user info to the service
         return this.eventsService.updateEvent(id, event);
     }
-
-
 }
