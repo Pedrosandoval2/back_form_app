@@ -1,6 +1,6 @@
 
 import { IsBoolean, IsNumber } from "class-validator";
-import { customersEvent } from "src/customersEvents/customersEvent.entity";
+import { CustomersEvent } from "src/customersEvents/customersEvent.entity";
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm"
 
 @Entity({ name: 'customers' })
@@ -32,6 +32,6 @@ export class Customer {
     })
     createdAt: Date;
 
-    @OneToMany(() => customersEvent, (cp) => cp.customer)
-    customersEvents: customersEvent[];
+    @OneToMany(() => CustomersEvent, (cp) => cp.customer)
+    customersEvents: CustomersEvent[];
 }

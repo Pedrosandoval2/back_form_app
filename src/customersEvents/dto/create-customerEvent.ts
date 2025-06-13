@@ -19,4 +19,8 @@ export class CreateCustomerEventDto {
     @ValidateNested({ each: true })
     @Type(() => PaymentDto) // <-- esto transforma cada item en PaymentDto
     payments: PaymentDto[];
+
+    @IsNumber()
+    @IsNotEmpty()
+    quantity:number;
 }

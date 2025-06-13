@@ -4,7 +4,7 @@ import { Payment } from "src/payments/payments.entity";
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany } from "typeorm"
 
 @Entity({ name: 'customersEvents' })
-export class customersEvent {
+export class CustomersEvent {
 
     @PrimaryGeneratedColumn()
     id: number;
@@ -28,5 +28,11 @@ export class customersEvent {
     createdAt: Date;
 
     @Column({default: true})
-    isActive: boolean
+    isActive: boolean;
+
+    @Column()
+    quantity: number;
+
+    @Column()
+    total_price: number;
 }

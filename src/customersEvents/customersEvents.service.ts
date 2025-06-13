@@ -3,7 +3,7 @@ import { BadRequestException, ConflictException, Injectable, InternalServerError
 import { CreateCustomerEventDto } from './dto/create-customerEvent';
 import { UpdateCustomerEventDto } from './dto/update-customerEvent';
 import { InjectRepository } from '@nestjs/typeorm';
-import { customersEvent } from './customersEvent.entity';
+import { CustomersEvent } from './customersEvent.entity';
 import { Customer } from 'src/customers/customer.entity';
 import { Event } from 'src/events/event.entity';
 import { Payment } from 'src/payments/payments.entity';
@@ -13,8 +13,11 @@ import { Repository } from 'typeorm';
 export class CustomersEventsService {
 
     constructor(
-        @InjectRepository(customersEvent)
-        private customersEventRepo: Repository<customersEvent>,
+        @InjectRepository(CustomersEvent)
+        private customersEventRepo: Repository<CustomersEvent>,
+
+        @InjectRepository(Event)
+        private eventRepo: Repository<Event>,
 
         @InjectRepository(Payment)
         private paymentRepo: Repository<Payment>,
@@ -33,14 +36,27 @@ export class CustomersEventsService {
                 throw new BadRequestException('Este cliente ya está registrado en este evento');
             }
 
+            const event = await this.eventRepo.findOne({
+                where: {
+                    id: createDto.eventId
+                }
+            })
+
+            if (!event) {
+                throw new BadRequestException('Este evento no está registrado');
+            }
+
             // 1. Guardar primero customerEvent sin pagos
             const customerEvent = await this.customersEventRepo.save(
                 this.customersEventRepo.create({
                     customer: { id: createDto.customerId },
                     event: { id: createDto.eventId },
                     description: createDto.description,
+                    quantity: createDto.quantity,
+                    total_price: event.price_unit * createDto.quantity
                 })
             );
+
 
             // 2. Crear pagos ya con el customerEvent persistido
             // No debería de crear aquí, sino en su propio 
