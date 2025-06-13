@@ -18,6 +18,13 @@ export class EventsController {
         return this.eventsService.findAll();
     }
 
+    @Get(':id')
+    findOne(
+        @Param('id') id: number
+    ) {
+        return this.eventsService.findOne(id);
+    }
+
     @Post('create')
     create(
         @Body() event: CreateEventDto, @Req() req: Request
