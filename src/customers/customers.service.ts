@@ -44,7 +44,7 @@ export class CustomersService {
         return this.customersRepository.find();
     }
 
-    async findOne(id: string): Promise<Pick<Customer, 'firstName' | 'lastName' | 'isActive' | 'isMember'>> {
+    async findOne(id: number): Promise<Pick<Customer, 'firstName' | 'lastName' | 'isActive' | 'isMember'>> {
 
         if (!id) throw new BadRequestException('No existe el id');
         try {
@@ -65,7 +65,7 @@ export class CustomersService {
 
     }
 
-    async updateCustomer(id: string, updateDto: UpdateCustomerDto) {
+    async updateCustomer(id: number, updateDto: UpdateCustomerDto) {
         console.log("🚀 ~ CustomersService ~ updateCustomer ~ updateDto:", updateDto)
 
         if (!id) throw new BadRequestException('No hay id');
@@ -96,7 +96,7 @@ export class CustomersService {
         }
     }
 
-    async deleteCustomer(id: string) {
+    async deleteCustomer(id: number) {
         if (!id) throw new Error('ID inválido para actualizar el usuario');
 
         try {

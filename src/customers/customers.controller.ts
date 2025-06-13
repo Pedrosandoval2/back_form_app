@@ -30,17 +30,17 @@ export class customersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: number) {
     return this.customersService.findOne(id);
   }
 
   @Patch('update/:id')
-  update(@Param('id') id: string, @Body() updateDto: UpdateCustomerDto) {
+  update(@Param('id') id: number, @Body() updateDto: UpdateCustomerDto) {
     return this.customersService.updateCustomer(id, updateDto);
   }
 
   @Put('delete/:id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number) {
     return this.customersService.deleteCustomer(id);
   }
 }

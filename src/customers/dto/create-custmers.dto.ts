@@ -20,6 +20,6 @@ export class CreateCustomerDto {
     isActive: boolean;
 
     @IsNumber()
-    phone: number;
+    phone: string;
 
 }

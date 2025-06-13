@@ -1,8 +1,7 @@
-
-import { IsString } from "class-validator";
 import { Customer } from "src/customers/customer.entity";
 import { Event } from "src/events/event.entity";
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from "typeorm"
+import { Payment } from "src/payments/payments.entity";
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany } from "typeorm"
 
 @Entity({ name: 'customersEvents' })
 export class customersEvent {
@@ -19,12 +18,15 @@ export class customersEvent {
     @Column()
     description: string;
 
-    @IsString()
-    payment_method: string;
+    @OneToMany(() => Payment, (payment) => payment.customersEvent, { cascade: true, eager: true })
+    payments: Payment[];
 
     @Column({
         type: 'datetime',
         default: () => 'CURRENT_TIMESTAMP'
     })
     createdAt: Date;
+
+    @Column({default: true})
+    isActive: boolean
 }

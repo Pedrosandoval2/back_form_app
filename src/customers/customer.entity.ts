@@ -7,7 +7,7 @@ import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm"
 export class Customer {
 
     @PrimaryGeneratedColumn()
-    id: string;
+    id: number;
 
     @Column({ nullable: false, unique: true })
     firstName: string;
@@ -24,8 +24,7 @@ export class Customer {
     isActive: boolean;
 
     @Column()
-    @IsNumber()
-    phone: number;
+    phone: string;
 
     @Column({
         type: 'datetime',
