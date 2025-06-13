@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 
 import * as bcryptjs from 'bcryptjs';
 import { LoginDto } from '../auth/dto/login-user.dto';
+import { UpdateAuthDto } from 'src/auth/dto/update-auth.dto';
 
 @Injectable()
 export class UsersService {
@@ -59,8 +60,9 @@ export class UsersService {
             }
 
         } catch (error) {
-            console.error('Error al crear usuario: ', error)
-            throw new BadRequestException('Error inesperado al guardar el usuario');
+            const errorMessage = error?.message || 'Error desconocido';
+            console.error('Error al crear usuario:', errorMessage);
+            throw error;
         }
     }
 
@@ -100,8 +102,9 @@ export class UsersService {
             }
 
         } catch (error) {
-            console.error('Ocurrió un error al hacer login: ', error)
-            throw new BadRequestException('Error inesperado ingresar')
+            const errorMessage = error?.message || 'Error desconocido';
+            console.error('Error al hacer login:', errorMessage);
+            throw error;
         }
 
 
@@ -129,9 +132,34 @@ export class UsersService {
             };
 
         } catch (error) {
-            console.error('Hubo un error al obtener al usuario: ', error)
+            const errorMessage = error?.message || 'Error desconocido';
+            console.error('Error al obtener usuario:', errorMessage);
+            throw error;
+        }
 
-            throw new BadRequestException('Error inesperado al obtener el usuario')
+    }
+
+    async findOneByEmail(email: string): Promise<Omit<User, 'password'>> {
+        if (!email) throw new BadRequestException('No existe el id');
+
+        try {
+            const user = await this.usersRepository.findOne({ where: { email } });
+
+            if (!user) throw new Error('Usuario no encontrado');
+
+            return {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                role: user.role,
+                isActive: user.isActive
+            };
+
+        } catch (error) {
+            const errorMessage = error?.message || 'Error desconocido';
+            console.error('Error al obtener usuario:', errorMessage);
+            throw error;
         }
 
     }
@@ -153,9 +181,37 @@ export class UsersService {
             }
 
         } catch (error) {
+            const errorMessage = error?.message || 'Error desconocido';
+            console.error('Error al actualizar usuario:', errorMessage);
+            throw error;
+        }
 
-            console.error('Error al actualizar al usuario: ', error)
-            throw new BadRequestException('Hubo un error al actualizar al usuario')
+    }
+
+    async updateUserByAuth(userUpdate: UpdateAuthDto) {
+        if (!userUpdate) throw new Error('ID inválido para actualizar el usuario');
+
+        try {
+            const user = await this.usersRepository.findOne({ where: { email: userUpdate.email } });
+
+            if (!user) throw new Error('Usuario no encontrado');
+
+            if (hasSpaces(userUpdate.password)) throw new HttpException('Error in password', HttpStatus.CONFLICT)
+
+            Object.assign(user, {
+                email: userUpdate.email,
+                password: await bcryptjs.hash(userUpdate.password, 12),
+            });
+            await this.usersRepository.save(user);
+
+            return {
+                message: 'Usuario actualizado'
+            }
+
+        } catch (error) {
+            const errorMessage = error?.message || 'Error desconocido';
+            console.error('Error al actualizar usuario:', errorMessage);
+            throw error;
         }
 
     }
@@ -177,8 +233,9 @@ export class UsersService {
                 message: 'Usuario descativado con éxito'
             }
         } catch (error) {
-            console.error('Error al desactivar al usuario: ', error)
-            throw new BadRequestException('Hubo un error al desactivar al usuario')
+            const errorMessage = error?.message || 'Error desconocido';
+            console.error('Error al desactivar usuario:', errorMessage);
+            throw error;
         }
     }
 
