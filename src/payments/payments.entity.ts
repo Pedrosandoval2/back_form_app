@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
-import { customersEvent } from 'src/customersEvents/customersEvent.entity';
+import { CustomersEvent } from 'src/customersEvents/customersEvent.entity';
 import { Exclude } from 'class-transformer';
 
 @Entity({ name: 'payments' })
@@ -14,8 +14,8 @@ export class Payment {
   amount: number;
   
   @Exclude()
-  @ManyToOne(() => customersEvent, (ce) => ce.payments, { onDelete: 'CASCADE' })
-  customersEvent: customersEvent;
+  @ManyToOne(() => CustomersEvent, (ce) => ce.payments, { onDelete: 'CASCADE' })
+  customersEvent: CustomersEvent;
 
   @Column({
     type: 'datetime',

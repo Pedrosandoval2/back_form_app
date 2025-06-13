@@ -1,5 +1,5 @@
 
-import { customersEvent } from "src/customersEvents/customersEvent.entity";
+import { CustomersEvent } from "src/customersEvents/customersEvent.entity";
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm"
 
 @Entity({ name: 'events' })
@@ -32,6 +32,6 @@ export class Event {
     @Column()
     userCreate: String;
 
-    @OneToMany(() => customersEvent, ce => ce.event)
-    customersEvents: customersEvent[];
+    @OneToMany(() => CustomersEvent, ce => ce.event)
+    customersEvents: CustomersEvent[];
 }
