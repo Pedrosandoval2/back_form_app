@@ -5,18 +5,20 @@ import { User } from './user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { hasSpaces } from './utils/hasSpaces';
-import { JwtService } from '@nestjs/jwt';
 
 import * as bcryptjs from 'bcryptjs';
 import { LoginDto } from '../auth/dto/login-user.dto';
 import { UpdateAuthDto } from 'src/auth/dto/update-auth.dto';
+import { instanceToPlain } from 'class-transformer';
+
+// TODO: Guardar el refresh token en la base de datos y ver como crear un endpoint para refrescar el token
+// TODO: En el front hacer que se guarde el refresh token en localStorage y se envie al backend para refrescar el token automaticamente
 
 @Injectable()
 export class UsersService {
     constructor(
         @InjectRepository(User)
-        private usersRepository: Repository<User>,
-        private readonly jwtServise: JwtService
+        private readonly usersRepository: Repository<User>,
     ) { }
 
     async register({ email, firstName, lastName, password }: CreateUserDto) {
@@ -36,9 +38,6 @@ export class UsersService {
             if (hasSpaces(password)) {
                 return new HttpException('Error in password', HttpStatus.CONFLICT)
             }
-            const payload = { email };
-
-            const access_token = await this.jwtServise.signAsync(payload)
 
             const newUser = this.usersRepository.create({
                 email,
@@ -49,15 +48,8 @@ export class UsersService {
 
             if (!newUser) throw new BadRequestException('No se ha podido crear el usuario');
 
-            this.usersRepository.save(newUser)
-            return {
-                access_token,
-                user: {
-                    id: newUser.id,
-                    firstName,
-                    email,
-                }
-            }
+            return this.usersRepository.save(newUser)
+
 
         } catch (error) {
             const errorMessage = error?.message || 'Error desconocido';
@@ -88,18 +80,8 @@ export class UsersService {
                 throw new HttpException('password does not match', HttpStatus.CONFLICT)
             }
 
-            const payload = { email };
+            return userFound;
 
-            const access_token = await this.jwtServise.signAsync(payload)
-
-            return {
-                access_token,
-                user: {
-                    id: userFound.id,
-                    email,
-                    username: userFound.firstName,
-                }
-            }
 
         } catch (error) {
             const errorMessage = error?.message || 'Error desconocido';
@@ -110,11 +92,55 @@ export class UsersService {
 
     }
 
-    findAll(): Promise<User[]> {
-        return this.usersRepository.find();
+    async findAll(query: string, page = 1, limit = 10) {
+        try {
+            const queryBuilder = this.usersRepository.createQueryBuilder('user').skip((page - 1) * limit).take(limit);
+
+            queryBuilder.select([
+                'user.id',
+                'user.firstName',
+                'user.lastName',
+                'user.email',
+                'user.role',
+                'user.isActive',
+                'user.refresh_token',
+            ]);
+            const total = await this.usersRepository.count();
+
+            if (query) {
+                queryBuilder
+                    .where('LOWER(user.firstName) LIKE :query', { query: `${query.toLowerCase()}%` })
+                    .orWhere('LOWER(user.email) LIKE :query', { query: `${query.toLowerCase()}%` });
+
+                return {
+                    data: await queryBuilder.getMany(),
+                    page,
+                    limit,
+                    total: total,
+                    totalPages: Math.ceil(total / limit),
+                };
+            }
+
+            const data = instanceToPlain(await this.usersRepository.find({
+                skip: (page - 1) * limit,
+                take: limit
+            }));
+
+            return {
+                data,
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            }
+
+        } catch (error) {
+            console.log("🚀 ~ UsersService ~ findAll ~ error:", error)
+            return Promise.resolve([]);
+        }
     }
 
-    async findOne(id: string): Promise<Omit<User, 'password'>> {
+    async findOne(id: string): Promise<Omit<User, 'password' | 'refresh_token'>> {
         if (!id) throw new BadRequestException('No existe el id');
 
         try {
@@ -139,7 +165,7 @@ export class UsersService {
 
     }
 
-    async findOneByEmail(email: string): Promise<Omit<User, 'password'>> {
+    async findOneByEmail(email: string): Promise<Omit<User, 'password' | 'refresh_token'>> {
         if (!email) throw new BadRequestException('No existe el id');
 
         try {
@@ -153,7 +179,7 @@ export class UsersService {
                 lastName: user.lastName,
                 email: user.email,
                 role: user.role,
-                isActive: user.isActive
+                isActive: user.isActive,
             };
 
         } catch (error) {

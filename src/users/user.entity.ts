@@ -1,5 +1,6 @@
-import { IsBoolean, IsEmail, IsNotEmpty, Length, Min, validate } from 'class-validator';
-import { Entity, Column, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { Exclude } from 'class-transformer';
+import { IsBoolean, IsEmail, IsNotEmpty, Length, Min } from 'class-validator';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'users' })
 export class User {
@@ -16,6 +17,7 @@ export class User {
 
   @Column()
   @IsNotEmpty()
+  @Exclude()
   @Length(5, 20)
   password: string;
 
@@ -31,4 +33,7 @@ export class User {
   @Column({ default: true })
   @IsBoolean()
   isActive: boolean;
+
+  @Column({ nullable: true })
+  refresh_token: string;
 }
