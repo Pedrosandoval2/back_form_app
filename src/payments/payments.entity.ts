@@ -10,7 +10,7 @@ export class Payment {
   @Column()
   method: string; // efectivo, yape, etc.
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
   
   @Exclude()
