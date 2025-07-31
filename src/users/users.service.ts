@@ -105,19 +105,22 @@ export class UsersService {
                 'user.isActive',
                 'user.refresh_token',
             ]);
-            const total = await this.usersRepository.count();
+            const total = await queryBuilder.getCount();
 
             if (query) {
                 queryBuilder
                     .where('LOWER(user.firstName) LIKE :query', { query: `${query.toLowerCase()}%` })
                     .orWhere('LOWER(user.email) LIKE :query', { query: `${query.toLowerCase()}%` });
 
+                const data = await queryBuilder.getMany();
+                const totalQueryBuilder = await queryBuilder.getCount();
+
                 return {
-                    data: await queryBuilder.getMany(),
+                    data,
                     page,
                     limit,
-                    total: total,
-                    totalPages: Math.ceil(total / limit),
+                    total: totalQueryBuilder,
+                    totalPages: Math.ceil(totalQueryBuilder / limit),
                 };
             }
 
