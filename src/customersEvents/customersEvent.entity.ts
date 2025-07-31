@@ -33,6 +33,6 @@ export class CustomersEvent {
     @Column()
     quantity: number;
 
-    @Column()
+    @Column({ type: 'decimal', precision: 10, scale: 2 })
     total_price: number;
 }

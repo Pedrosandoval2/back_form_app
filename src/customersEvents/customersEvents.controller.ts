@@ -24,13 +24,14 @@ export class CustomersEventsController {
         return this.customersEventsService.createCustomerEvent(createDto);
     }
 
-    @Get()
-    findAll() {
-        return this.customersEventsService.findAll();
+    @Get('all/:id')
+    findAll(@Param('id') id: string) {
+        return this.customersEventsService.findAll(+id);
     }
 
     @Get(':id')
     findOne(@Param('id') id: string) {
+        console.log("🚀 ~ CustomersEventsController ~ findOne ~ id:", id)
         return this.customersEventsService.findOne(+id);
     }
 

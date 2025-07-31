@@ -41,7 +41,7 @@ export class CustomersEventsService {
                     id: createDto.eventId
                 }
             })
-
+            
             if (!event) {
                 throw new BadRequestException('Este evento no está registrado');
             }
@@ -57,14 +57,13 @@ export class CustomersEventsService {
                 })
             );
 
-
             // 2. Crear pagos ya con el customerEvent persistido
             // No debería de crear aquí, sino en su propio 
             const payments = createDto.payments.map((p) =>
                 this.paymentRepo.create({
                     method: p.method,
                     amount: p.amount,
-                    customersEvent: customerEvent,
+                    customersEvent: customerEvent
                 })
             );
 
@@ -81,26 +80,60 @@ export class CustomersEventsService {
         }
     }
 
-    async findAll() {
-        return await this.customersEventRepo.find({
-            relations: ['customer', 'event', 'payments'], // ajusta según tus relaciones
-        });
-    }
+    async findAll(id:number) {
+        const queryBuilder = this.customersEventRepo.createQueryBuilder('customersEvent')
+            .leftJoinAndSelect('customersEvent.event', 'event')
+            .leftJoinAndSelect('customersEvent.payments', 'payments')
+            .leftJoinAndSelect('customersEvent.customer', 'customer')
+            .where('customersEvent.event.id = :id', { id });
 
-    async findOne(id: number) {
-        const customerEvent = await this.customersEventRepo.findOne({
-            where: { id },
-            relations: ['customer', 'event', 'payments'],
-        });
+            queryBuilder.select([
+                'customersEvent.id',
+                'customersEvent.description',
+                'customersEvent.isActive',
+                'customersEvent.quantity',
+                'customersEvent.total_price',
+                'customersEvent.createdAt',
 
+                'customer.firstName',
+                'customer.lastName',
+
+                'event.id',
+                'event.name_event',
+
+                'payments.id',
+                'payments.method',
+                'payments.amount',
+                'payments.createdAt',
+            ])
+
+        const customerEvent = await queryBuilder.getMany();
         if (!customerEvent) {
-            throw new NotFoundException(`CustomerEvent con ID ${id} no encontrado`);
+            throw new NotFoundException(`CustomerEvent with ID ${id} not found`);
         }
-
         return customerEvent;
     }
 
+    async findOne(id: number) {
+        if (!id) throw new BadRequestException('No existe el id');
+        try {
+            const customerEvent = await this.customersEventRepo.findOne({
+                where: { id },
+                relations: ['customer', 'event', 'payments'],
+            });
+
+            if (!customerEvent) throw new NotFoundException('CustomerEvent no encontrado');
+
+            return customerEvent;
+        } catch (error) {
+            console.error('Error al obtener CustomerEvent:', error);
+            throw new InternalServerErrorException('Error al obtener CustomerEvent');
+        }
+    }
+
+
     async update(id: number, updateDto: UpdateCustomerEventDto) {
+        console.log("🚀 ~ CustomersEventsService ~ update ~ updateDto:", updateDto)
         const customerEvent = await this.customersEventRepo.findOne({
             where: { id },
             relations: ['payments'],
