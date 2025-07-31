@@ -14,7 +14,7 @@ export class Event {
     @Column({nullable: true})
     description: string;
 
-    @Column({ nullable: false, type: 'decimal' })
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false })
     price_unit: number;
 
     @Column({ nullable: false, type: 'date' }) // o 'timestamp' si necesitas hora también

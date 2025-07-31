@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 
 import { CreateEventDto } from './dto/create-event.dto';
 import { EventsService } from './events.service';
@@ -14,8 +14,12 @@ export class EventsController {
     ) { }
 
     @Get()
-    findAll() {
-        return this.eventsService.findAll();
+    findAll(
+        @Query('query') query: string,
+        @Query('page') page: number,
+        @Query('limit') limit: number
+    ) {
+        return this.eventsService.findAll(query, page, limit);
     }
 
     @Get(':id')
@@ -36,7 +40,7 @@ export class EventsController {
         return this.eventsService.createEvent(event, userEmail);
     }
 
-    @Post('update/:id')
+    @Patch('update/:id')
     update(
         @Param('id') id: number,
         @Body() event: CreateEventDto
