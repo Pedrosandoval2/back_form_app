@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CustomersService } from './customers.service';
@@ -16,7 +17,7 @@ import { AuthGuard } from 'src/auth/guard/auth.guard';
 
 @UseGuards(AuthGuard)
 @Controller('customers')
-export class customersController {
+export class CustomersController {
   constructor(private readonly customersService: CustomersService) { }
 
   @Post('create')
@@ -25,8 +26,8 @@ export class customersController {
   }
 
   @Get()
-  findAll() {
-    return this.customersService.findAll();
+  findAll(@Query('idEvent') idEvent?: number) {
+    return this.customersService.findAll(idEvent);
   }
 
   @Get(':id')

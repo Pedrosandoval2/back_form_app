@@ -3,7 +3,7 @@ import { CreateCustomerDto } from './dto/create-custmers.dto';
 import { UpdateCustomerDto } from './dto/update-customers.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Customer } from './customer.entity';
-import { Repository } from 'typeorm';
+import { QueryBuilder, Repository } from 'typeorm';
 
 @Injectable()
 export class CustomersService {
@@ -40,9 +40,43 @@ export class CustomersService {
     }
 
 
-    findAll(): Promise<Customer[]> {
-        return this.customersRepository.find();
+    async findAll(idEvent?: number) {
+        const queryBuilder = this.customersRepository.createQueryBuilder('customer')
+            .leftJoinAndSelect('customer.customersEvents', 'customerEvent')
+            .leftJoinAndSelect('customerEvent.event', 'event')
+            .where('customer.isActive = :isActive', { isActive: true });
+
+        if (idEvent) {
+            queryBuilder.andWhere(qb => {
+                // 	Crea una subconsulta dentro del QueryBuilder.
+                const subQuery = qb.subQuery()
+                // Selecciona los customerId de la tabla intermedia customersEvents.
+                    .select('ce.customerId')
+                    // Usa la tabla customersEvents (la que relaciona clientes y eventos) con alias ce.
+                    .from('customersEvents', 'ce')
+                   // Filtra por el id del evento que se pasa como parámetro.
+                    .where('ce.eventId = :idEvent')
+                    // Devuelve la subconsulta.
+                    .getQuery();
+
+                // 	Reemplaza :idEvent con el valor real que pasas a la función.
+                return `customer.id NOT IN ${subQuery}`;
+            }).setParameter('idEvent', idEvent);
+        }
+
+        queryBuilder.select([
+            'customer.id',
+            'customer.firstName',
+            'customer.lastName',
+            'customer.isActive',
+            'customer.isMember',
+            'customer.phone',
+            'customer.createdAt',
+        ]);
+        return await queryBuilder.getMany();
     }
+
+
 
     async findOne(id: number): Promise<Pick<Customer, 'firstName' | 'lastName' | 'isActive' | 'isMember'>> {
 
