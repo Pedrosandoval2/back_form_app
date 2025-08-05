@@ -3,14 +3,14 @@ import { CreateCustomerDto } from './dto/create-custmers.dto';
 import { UpdateCustomerDto } from './dto/update-customers.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Customer } from './customer.entity';
-import { QueryBuilder, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class CustomersService {
 
     constructor(
         @InjectRepository(Customer)
-        private customersRepository: Repository<Customer>
+        private readonly customersRepository: Repository<Customer>
     ) { }
 
     async createCustomer(createDto: CreateCustomerDto): Promise<Customer> {

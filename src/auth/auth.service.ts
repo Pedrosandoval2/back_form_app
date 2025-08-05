@@ -15,7 +15,6 @@ export class AuthService {
 
   async login(loginUser: LoginDto, res: Response) {
     const user = await this.usersService.signIn(loginUser)
-    console.log("🚀 ~ AuthService ~ login ~ user:", user)
 
     if (!user) return;
     const { accessToken, refreshToken } = await this.tokenService.generateTokens({
@@ -26,8 +25,6 @@ export class AuthService {
       email: user.email,
       id: user.id,
     });
-    
-    console.log("🚀 ~ AuthService ~ login ~ accessToken:", accessToken)
     res.cookie?.('refresh_token', refreshToken, {
       httpOnly: true,
       secure: false,
