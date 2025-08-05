@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 
 import { CreateCustomerEventDto } from './dto/create-customerEvent';
 import { UpdateCustomerEventDto } from './dto/update-customerEvent';
@@ -7,20 +7,22 @@ import { CustomersEvent } from './customersEvent.entity';
 import { Customer } from 'src/customers/customer.entity';
 import { Event } from 'src/events/event.entity';
 import { Payment } from 'src/payments/payments.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
 export class CustomersEventsService {
 
     constructor(
         @InjectRepository(CustomersEvent)
-        private customersEventRepo: Repository<CustomersEvent>,
+        private readonly customersEventRepo: Repository<CustomersEvent>,
 
         @InjectRepository(Event)
-        private eventRepo: Repository<Event>,
+        private readonly eventRepo: Repository<Event>,
 
         @InjectRepository(Payment)
-        private paymentRepo: Repository<Payment>,
+        private readonly paymentRepo: Repository<Payment>,
+
+        private readonly dataSource: DataSource,
     ) { }
 
     async createCustomerEvent(createDto: CreateCustomerEventDto) {
@@ -41,7 +43,7 @@ export class CustomersEventsService {
                     id: createDto.eventId
                 }
             })
-            
+
             if (!event) {
                 throw new BadRequestException('Este evento no está registrado');
             }
@@ -80,32 +82,37 @@ export class CustomersEventsService {
         }
     }
 
-    async findAll(id:number) {
+    async findAll(id: number) {
         const queryBuilder = this.customersEventRepo.createQueryBuilder('customersEvent')
             .leftJoinAndSelect('customersEvent.event', 'event')
             .leftJoinAndSelect('customersEvent.payments', 'payments')
             .leftJoinAndSelect('customersEvent.customer', 'customer')
             .where('customersEvent.event.id = :id', { id });
 
-            queryBuilder.select([
-                'customersEvent.id',
-                'customersEvent.description',
-                'customersEvent.isActive',
-                'customersEvent.quantity',
-                'customersEvent.total_price',
-                'customersEvent.createdAt',
+        queryBuilder.select([
+            'customersEvent.id',
+            'customersEvent.description',
+            'customersEvent.isActive',
+            'customersEvent.quantity',
+            'customersEvent.total_price',
+            'customersEvent.createdAt',
 
-                'customer.firstName',
-                'customer.lastName',
+            'customer.id',
+            'customer.firstName',
+            'customer.lastName',
+            'customer.phone',
+            'customer.isMember',
+            'customer.isActive',
+            'customer.createdAt',
 
-                'event.id',
-                'event.name_event',
+            'event.id',
+            'event.name_event',
 
-                'payments.id',
-                'payments.method',
-                'payments.amount',
-                'payments.createdAt',
-            ])
+            'payments.id',
+            'payments.method',
+            'payments.amount',
+            'payments.createdAt',
+        ])
 
         const customerEvent = await queryBuilder.getMany();
         if (!customerEvent) {
@@ -133,49 +140,52 @@ export class CustomersEventsService {
 
 
     async update(id: number, updateDto: UpdateCustomerEventDto) {
-        console.log("🚀 ~ CustomersEventsService ~ update ~ updateDto:", updateDto)
-        const customerEvent = await this.customersEventRepo.findOne({
-            where: { id },
-            relations: ['payments'],
+        const { customerId, eventId, description, quantity, payments } = updateDto;
+
+        // Pre-cargar la entidad con posibles cambios simples
+        const customerEvent = await this.customersEventRepo.preload({
+            id,
+            ...(customerId && { customer: { id: customerId } as Customer }),
+            ...(eventId && { event: { id: eventId } as Event }),
+            ...(description !== undefined && { description }),
+            ...(quantity !== undefined && { quantity }),
         });
 
         if (!customerEvent) {
-            throw new NotFoundException('Relación customer-event no encontrada');
+            throw new NotFoundException(`CustomerEvent con id=${id} no encontrado.`);
         }
 
-        // Actualizar relaciones por ID
-        if (updateDto.customerId) {
-            customerEvent.customer = { id: updateDto.customerId } as Customer;
+        // Si no hay cambios en payments, guardamos y salimos
+        if (!payments) {
+            await this.customersEventRepo.save(customerEvent);
+            return { message: 'Actualizado con éxito (sin cambios en pagos)' };
         }
 
-        if (updateDto.eventId) {
-            customerEvent.event = { id: updateDto.eventId } as Event;
-        }
+        // Si hay pagos, utilizamos transacción
+        await this.dataSource.transaction(async (manager) => {
+            // Eliminamos pagos antiguos
+            await manager.getRepository(Payment).delete({ customersEvent: { id } });
 
-        // Actualizar otros campos simples
-        if (updateDto.description) {
-            customerEvent.description = updateDto.description;
-        }
-
-        // Eliminar pagos actuales y agregar los nuevos
-        if (updateDto.payments && updateDto.payments.length > 0) {
-            await this.paymentRepo.delete({ customersEvent: { id } });
-
-            const newPayments = updateDto.payments.map((p) =>
-                this.paymentRepo.create({
+            // Creamos los nuevos
+            const newPayments = payments.map(p =>
+                manager.getRepository(Payment).create({
                     method: p.method,
                     amount: p.amount,
                     customersEvent: customerEvent,
-                }),
+                })
             );
+            await manager.getRepository(Payment).save(newPayments);
 
+            // Asociamos los pagos a la entidad principal
             customerEvent.payments = newPayments;
-        }
 
-        await this.customersEventRepo.save(customerEvent);
+            // Finalmente guardamos los cambios en CustomerEvent
+            await manager.getRepository('customersEvents').save(customerEvent);
+        });
 
         return { message: 'Actualizado con éxito' };
     }
+
 
 
     async remove(id: number) {

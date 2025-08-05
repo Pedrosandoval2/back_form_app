@@ -18,7 +18,7 @@ import { AuthGuard } from "src/auth/guard/auth.guard";
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
-  @Get("")
+  @Get()
   findAll(
     @Query('query') query: string,
     @Query('page') page: number,
