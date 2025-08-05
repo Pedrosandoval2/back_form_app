@@ -259,7 +259,7 @@ export class UsersService {
             if (!user.isActive) return { message: 'Usuario ya está desactivado' }
 
             Object.assign(user, { isActive: false });
-            this.usersRepository.save(user)
+            await this.usersRepository.save(user);
 
             return {
                 message: 'Usuario descativado con éxito'
