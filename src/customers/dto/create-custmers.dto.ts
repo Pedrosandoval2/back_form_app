@@ -19,8 +19,7 @@ export class CreateCustomerDto {
     @IsOptional()
     isActive: boolean;
 
-    @IsNumber({}, { message: 'El teléfono debe ser un número' },)
-    @IsOptional()
+    @IsNumber({}, { message: 'El teléfono debe ser un número' })
     phone: string;
 
 }

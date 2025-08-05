@@ -80,7 +80,7 @@ export class EventsService {
         try {
             const event = await this.eventRepository.findOne({ where: { id } })
 
-            if (!event) throw new Error('Usuario no encontrado');
+            if (!event) throw new Error('Evento no encontrado');
 
             return {
                 name_event: event.name_event,

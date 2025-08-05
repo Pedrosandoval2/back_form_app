@@ -21,11 +21,15 @@ export class UsersService {
         private readonly usersRepository: Repository<User>,
     ) { }
 
+    private validatePassword(password: string): void {
+        if (hasSpaces(password)) {
+            throw new HttpException('Error in password', HttpStatus.CONFLICT);
+        }
+    }
+
     async register({ email, firstName, lastName, password }: CreateUserDto) {
         if (!email) throw new BadRequestException('No hay usuario para crear');
-        if (hasSpaces(password)) {
-            return new HttpException('Error in password', HttpStatus.CONFLICT)
-        }
+        this.validatePassword(password);
         try {
             const userFound = await this.usersRepository.findOne({
                 where: { firstName }
@@ -70,16 +74,15 @@ export class UsersService {
                 throw new HttpException('user not found', HttpStatus.CONFLICT)
             }
 
+            if (hasSpaces(password)) {
+                throw new HttpException('password does not match', HttpStatus.CONFLICT)
+            }
+
             const isMatch = await bcryptjs.compare(password, userFound.password);
 
             if (!isMatch) {
                 throw new HttpException('Password does not match', HttpStatus.CONFLICT);
             }
-
-            if (hasSpaces(password)) {
-                throw new HttpException('password does not match', HttpStatus.CONFLICT)
-            }
-
             return userFound;
 
 
@@ -202,7 +205,7 @@ export class UsersService {
             if (!user) throw new Error('Usuario no encontrado');
 
             Object.assign(user, userUpdate);
-            this.usersRepository.save(user);
+            await this.usersRepository.save(user);
 
             return {
                 firstName: user.firstName,
@@ -256,7 +259,7 @@ export class UsersService {
             if (!user.isActive) return { message: 'Usuario ya está desactivado' }
 
             Object.assign(user, { isActive: false });
-            this.usersRepository.save(user)
+            await this.usersRepository.save(user);
 
             return {
                 message: 'Usuario descativado con éxito'
