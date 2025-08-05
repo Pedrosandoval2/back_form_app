@@ -6,6 +6,7 @@ import { UsersModule } from "./users/users.module";
 import { AuthModule } from "./auth/auth.module";
 import { EventsModule } from "./events/events.module";
 import { CustomersModule } from "./customers/customers.module";
+import { CustomersEventsModule } from "./customersEvents/customersEvents.module";
 
 @Module({
   imports: [TypeOrmModule.forRoot({
@@ -17,7 +18,7 @@ import { CustomersModule } from "./customers/customers.module";
     database: 'back_form_app',
     entities: [__dirname + '/**/*.entity{.ts,.js}'],
     synchronize: true,
-  }), UsersModule, AuthModule, EventsModule, CustomersModule],
+  }), UsersModule, AuthModule, EventsModule, CustomersModule, CustomersEventsModule],
   controllers: [AppController],
   providers: [AppService],
 })
