@@ -74,16 +74,15 @@ export class UsersService {
                 throw new HttpException('user not found', HttpStatus.CONFLICT)
             }
 
+            if (hasSpaces(password)) {
+                throw new HttpException('password does not match', HttpStatus.CONFLICT)
+            }
+
             const isMatch = await bcryptjs.compare(password, userFound.password);
 
             if (!isMatch) {
                 throw new HttpException('Password does not match', HttpStatus.CONFLICT);
             }
-
-            if (hasSpaces(password)) {
-                throw new HttpException('password does not match', HttpStatus.CONFLICT)
-            }
-
             return userFound;
 
 
