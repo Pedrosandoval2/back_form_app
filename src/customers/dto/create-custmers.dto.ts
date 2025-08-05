@@ -19,7 +19,7 @@ export class CreateCustomerDto {
     @IsOptional()
     isActive: boolean;
 
-    @IsNumber()
+    @Matches(/^\d+$/, { message: 'El teléfono debe contener solo números' })
     phone: string;
 
 }
