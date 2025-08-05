@@ -205,7 +205,7 @@ export class UsersService {
             if (!user) throw new Error('Usuario no encontrado');
 
             Object.assign(user, userUpdate);
-            this.usersRepository.save(user);
+            await this.usersRepository.save(user);
 
             return {
                 firstName: user.firstName,
