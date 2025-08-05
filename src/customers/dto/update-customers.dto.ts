@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { Type } from "class-transformer";
+import { IsBoolean, IsEmail, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class UpdateCustomerDto {
 
@@ -14,8 +15,17 @@ export class UpdateCustomerDto {
     @IsOptional()
     email: string;
 
-    @IsNumber()
     @IsOptional()
+    @Type(() => Number)
+    @IsNumber({}, { message: 'El teléfono debe ser un número válido' })
     phone: number;
+
+    @IsOptional()
+    @IsBoolean()
+    isMember: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    isActive: boolean;
 
 }

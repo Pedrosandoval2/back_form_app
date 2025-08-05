@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateCustomerDto } from './dto/create-custmers.dto';
 import { UpdateCustomerDto } from './dto/update-customers.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -141,35 +141,37 @@ export class CustomersService {
     }
 
     async updateCustomer(id: number, updateDto: UpdateCustomerDto) {
-        console.log("🚀 ~ CustomersService ~ updateCustomer ~ updateDto:", updateDto)
+        if (typeof id !== 'number' || isNaN(id)) {
+            throw new BadRequestException('ID inválido');
+        }
 
-        if (!id) throw new BadRequestException('No hay id');
-
-        if (!updateDto) throw new BadRequestException('No hay datos');
+        if (!updateDto || Object.keys(updateDto).length === 0) {
+            throw new BadRequestException('No hay datos para actualizar');
+        }
 
         try {
-            const existingCustomer = await this.customersRepository.findOne({
-                where: { id },
+            const customerToUpdate = await this.customersRepository.preload({
+                id,
+                ...updateDto,
+                phone: updateDto.phone ? String(updateDto.phone) : undefined, // Aseguramos que phone sea un string
             });
 
-            if (!existingCustomer) {
-                throw new BadRequestException('El cliente no existe');
+            if (!customerToUpdate) {
+                throw new NotFoundException('El cliente no existe');
             }
 
-            Object.assign(existingCustomer, updateDto)
-
-            await this.customersRepository.save(existingCustomer);
+            const saved = await this.customersRepository.save(customerToUpdate);
 
             return {
-                message: 'Usuario actualizado'
+                message: 'Cliente actualizado correctamente',
+                data: saved,
             };
-
         } catch (error) {
-            const errorMessage = error?.message || 'Error desconocido';
-            console.error('Error al actualizar customer:', errorMessage);
-            throw error;
+            console.error('Error al actualizar customer:', error?.message || error);
+            throw new InternalServerErrorException('Error al actualizar el cliente');
         }
     }
+
 
     async deleteCustomer(id: number) {
         if (!id) throw new Error('ID inválido para actualizar el usuario');
