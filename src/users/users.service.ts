@@ -21,11 +21,15 @@ export class UsersService {
         private readonly usersRepository: Repository<User>,
     ) { }
 
+    private validatePassword(password: string): void {
+        if (hasSpaces(password)) {
+            throw new HttpException('Error in password', HttpStatus.CONFLICT);
+        }
+    }
+
     async register({ email, firstName, lastName, password }: CreateUserDto) {
         if (!email) throw new BadRequestException('No hay usuario para crear');
-        if (hasSpaces(password)) {
-            return new HttpException('Error in password', HttpStatus.CONFLICT)
-        }
+        this.validatePassword(password);
         try {
             const userFound = await this.usersRepository.findOne({
                 where: { firstName }
