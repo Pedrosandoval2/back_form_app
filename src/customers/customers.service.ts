@@ -39,8 +39,49 @@ export class CustomersService {
         }
     }
 
+    async findAll(query: string, page = 1, limit = 10) {
+        try {
+            const queryBuilder = this.customersRepository.createQueryBuilder('customer').skip((page - 1) * limit).take(limit);
+            const totalCustomers = await queryBuilder.getCount();
 
-    async findAll(idEvent?: number) {
+            if (query) {
+                queryBuilder
+                    .where('LOWER(customer.firstName) LIKE :query', { query: `${query.toLowerCase()}%` })
+                    .orWhere('LOWER(customer.lastName) LIKE :query', { query: `${query.toLowerCase()}%` });
+
+                const data = await queryBuilder.getMany();
+                const totalQueryBuilder = await queryBuilder.getCount();
+
+                return {
+                    data,
+                    page,
+                    limit,
+                    totalCustomers: totalQueryBuilder,
+                    totalPages: Math.ceil(totalQueryBuilder / limit),
+                };
+            }
+
+            const data = await this.customersRepository.find({
+                skip: (page - 1) * limit,
+                take: limit
+            });
+
+            return {
+                data,
+                page,
+                limit,
+                totalCustomers,
+                totalPages: Math.ceil(totalCustomers / limit),
+            }
+
+        } catch (error) {
+            console.log("🚀 ~ UsersService ~ findAll ~ error:", error)
+            return Promise.resolve([]);
+        }
+    }
+
+
+    async findAllOptions(idEvent?: number) {
         const queryBuilder = this.customersRepository.createQueryBuilder('customer')
             .leftJoinAndSelect('customer.customersEvents', 'customerEvent')
             .leftJoinAndSelect('customerEvent.event', 'event')
@@ -50,11 +91,11 @@ export class CustomersService {
             queryBuilder.andWhere(qb => {
                 // 	Crea una subconsulta dentro del QueryBuilder.
                 const subQuery = qb.subQuery()
-                // Selecciona los customerId de la tabla intermedia customersEvents.
+                    // Selecciona los customerId de la tabla intermedia customersEvents.
                     .select('ce.customerId')
                     // Usa la tabla customersEvents (la que relaciona clientes y eventos) con alias ce.
                     .from('customersEvents', 'ce')
-                   // Filtra por el id del evento que se pasa como parámetro.
+                    // Filtra por el id del evento que se pasa como parámetro.
                     .where('ce.eventId = :idEvent')
                     // Devuelve la subconsulta.
                     .getQuery();

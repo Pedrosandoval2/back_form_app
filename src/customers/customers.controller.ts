@@ -26,8 +26,17 @@ export class CustomersController {
   }
 
   @Get()
-  findAll(@Query('idEvent') idEvent?: number) {
-    return this.customersService.findAll(idEvent);
+  findAllOptions(@Query('idEvent') idEvent?: number) {
+    return this.customersService.findAllOptions(idEvent);
+  }
+
+  @Get('all')
+  findAll(
+    @Query('query') query: string,
+    @Query('page') page: number,
+    @Query('limit') limit: number
+  ) {
+    return this.customersService.findAll(query, page, limit);
   }
 
   @Get(':id')
